@@ -23,15 +23,10 @@ The following **optional** features are implemented:
 
 - [ ] Implement the restaurant detail page with map view (show restaurant's position). [react-native-maps](https://github.com/airbnb/react-native-maps))
 - [ ] Implement a custom switch to look like Yelp app.
-
-![Image](https://media.giphy.com/media/xUPGcFu0WDyYrdCdDq/giphy.gif)
-
 - [ ] Implement login page with [Facebook SDK](https://github.com/facebook/react-native-fbsdk)
 - [ ] Implements TabbarIOS
   - [ ] ListView, the layout as description above
-  - [ ] MapView, list all place on Map as Marker, and the layout as below. [Example](https://github.com/airbnb/react-native-maps#using-the-mapview-with-the-animated-api)
-
-  ![Image](http://i.giphy.com/3o6UBdGQdM1GmVoIdq.gif)
+  - [ ] MapView, list all place on Map as Marker, and the layout as below.
 
 The following **additional** features are implemented:
 
