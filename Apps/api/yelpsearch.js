@@ -1,6 +1,6 @@
 const params = {
-    client_id: 'tQyHUDn9ocxSt62kfaLS1w',
-    client_secret: '863nET7GMULkWMRaqCsnwV5xLwsmMv6TsQEsMxT3uoUMvV6mg6sCGXEO3XyccPUr', // use your own
+    client_id: 'qDPlyf_EBtljgqKxPALx6Q',
+    client_secret: 'RlFVBx8XonMjZcNnal3e827ooycXR7Pc4JngdpbM6UmdbW61GEfiss22OMRK0p4M', // use your own
     grant_type: 'client_credentials',
     url : "https://api.yelp.com/v3/businesses/search?location=US"
 }
@@ -9,12 +9,15 @@ export const Yelp = {
     async getToken() {
         await getYelpToken();
     },
-    async searchWithFilter() {
+     async searchWithFilter(keyword) {
         let token = await getYelpToken();
-        await searchByKeyword(token);
+        var data = await searchByKeyword(token,keyword);
+        return data;
     },
     async getCategories() {
-        return await getCategory();
+        var data = await getCategory();
+        console.log(data[0]);
+        return data;
     }
 }
 
@@ -35,14 +38,15 @@ async function getYelpToken() {
 
 async function searchByKeyword(token = {},searchTerm = '') {
     if (token == undefined) 
-        token = await getYelpToken();
+        token = getYelpToken();
     let authorization = token.token_type + ' ' + token.access_token;
-    var url = param.url + '&'
+    console.log(authorization);
+    var url = params.url;
     if(searchTerm.length !== 0)
     {
         url += searchTerm;
     }
-    await fetch(url, {
+    return await fetch(url, {
         method: "GET",
         headers: {
             'Authorization': authorization,
@@ -50,11 +54,12 @@ async function searchByKeyword(token = {},searchTerm = '') {
         },
         body: ""
     }).then((response) => response.json()).then((responseData) => {
-        return responseData.businesses
-    }).done();
+        console.log(responseData.businesses[0])
+        return responseData.businesses; 
+    });
 };
 
-async function getCategory(limit) {
+async function getCategory() {
     let url = 'https://www.yelp.com/developers/documentation/v3/all_category_list/categories.json';
     const request = new Request(url);
 
@@ -70,6 +75,7 @@ async function getCategory(limit) {
             };
             newArray.push(obj);
         })
+        //console.log(newArray[0])
         return newArray;
     })
 

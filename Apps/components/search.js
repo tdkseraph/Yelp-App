@@ -19,19 +19,21 @@ import Stars from 'react-native-stars'
 import FilterScreen from './filter.js'
 import {Yelp} from '../api/yelpsearch.js'
 
+import {actionCreators} from '../store/reducer.js'
+
 class Search extends Component {
     constructor(props) {
         super(props);
         this.renderPlaceCell = this
             .renderPlaceCell
             .bind(this);
-        const ds = new ListView.DataSource({
+        this.ds = new ListView.DataSource({
             rowHasChanged: (r1, r2) => r1 !== r2
         });
         this.state = {
             token: {},
             visible: true,
-            dataSource: ds.cloneWithRows(['']),
+            dataSource: this.ds.cloneWithRows(['']),
             isRefreshing: false,
             places: ['']
         };
@@ -53,25 +55,42 @@ class Search extends Component {
         return fetch(request).then(response => {
             return response.json()
         }).then(json => {
+            console.log(json);
             this.setState({token: json})
             this.getPlaceFromAPI();
         })
     }
 
     componentWillMount() {
+        //this.fetchToken();
+        this.searchWithTerm();
+    }
 
-        this.fetchToken();
-        // let keyword = '';
-        // if(this.props.)
-        //   let category = await Yelp.searchWithFilter();
-        // this.setState({
-        //     categories:category,
-        //     currentCategories: category.slice(0,3),
-        //     visible:false,
-        //      dataSource: this
-        //         .ds
-        //         .cloneWithRows(category.slice(0,3))
-        // })
+    async searchWithTerm(){
+        let keyword = '';
+       console.log('Search props : ',this.props.filterData);
+        if(this.props.filterData){
+            keyword = this.props.filterData.searchTerm;
+             console.log(keyword);
+        }
+
+        var data;
+        var count=0;
+         data = await Yelp.searchWithFilter(keyword).then((item) => {
+                return item;
+          });
+
+          if (data.length > 0){
+              console.log(data.length);
+                this.setState({
+                dataSource: this.state.dataSource.cloneWithRows(data),
+                isRefreshing: false,
+                visible: false,
+                places:data
+          })
+
+          }
+          
     }
 
     async getPlaceFromAPI() {
@@ -86,23 +105,20 @@ class Search extends Component {
         }).then((response) => response.json()).then((responseData) => {
             this.setState({
                 dataSource: this
-                    .state
-                    .dataSource
+                    .ds
                     .cloneWithRows(responseData.businesses),
                 isRefreshing: false,
                 visible: false,
                 places:responseData.businesses
             });
-
         }).done();
-
     }
 
-    _pressRow(rowData) {
-        console.log(this.props.userData);
-        //    this.props.navigator.push({      title:'DetailPage',
-        // passProps:rowData    });
-    }
+    // _pressRow(rowData) {
+    //     console.log(this.props.userData);
+    //     //    this.props.navigator.push({      title:'DetailPage',
+    //     // passProps:rowData    });
+    // }
 
     renderPlaceCell(rowData) {
         let location = {};
@@ -148,10 +164,7 @@ class Search extends Component {
                             style={{
                             paddingTop: 25
                         }}>
-                            <Text
-                                style={{
-                                fontWeight: 'bold'
-                            }}>Address: {location.address1}, {location.address2}</Text>
+                            <Text>Address: {location.address1}, {location.address2}</Text>
                             <Text>{location.city}
                                 - {location.display_address[location.display_address.length - 1]}
                             </Text>
@@ -170,7 +183,6 @@ class Search extends Component {
 
     searchPlacesList(text) {
         if (!text) {
-            console.log(text);
             this.cancelSearchPlacesList();
             return;
         }
@@ -257,7 +269,6 @@ goToFilterScreen = () => {
 }
 
 const mapStateToProps = (state) => {
-    console.log(state);
     return {
         filterData: state.params,
     }

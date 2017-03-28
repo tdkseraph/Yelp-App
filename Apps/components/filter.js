@@ -20,6 +20,7 @@ import AppStyles from '../stylesheet/decoration.js'
 import SearchScreen from './search.js'
 import ModalDropDown from 'react-native-modal-dropdown'
 import {Yelp} from '../api/yelpsearch.js'
+import {actionCreators} from '../store/reducer.js'
 
 class CustomSwitch extends Component{   
     constructor(props){
@@ -54,7 +55,7 @@ class Filter extends Component {
         });
 
         this.state= {
-            dropdown_6_icon_heart: true,
+            dropdown_icon_heart: true,
             visible:true,
             offerSetting:false,
             selectedDistance:{
@@ -71,16 +72,15 @@ class Filter extends Component {
         } 
     }
 
-  _dropdown_2_renderRow(rowData, rowID, highlighted) {
+  _dropdown_renderRow(rowData, rowID, highlighted) {
     let icon = highlighted ? require('../resources/heart.png') : require('../resources/uncheck.png');
-    let evenRow = rowID % 2;
     return (
       <TouchableHighlight underlayColor='white'>
-        <View style={[styles.dropdown_2_row, {backgroundColor:'white'}]}>
-          <Text style={[styles.dropdown_2_row_text, highlighted && {color: 'mediumaquamarine'}]}>
+        <View style={[styles.dropdown_row, {backgroundColor:'white'}]}>
+          <Text style={[styles.dropdown_row_text, highlighted && {color: 'mediumaquamarine'}]}>
             {`${rowData}`}
           </Text>
-          <Image style={styles.dropdown_2_image}
+          <Image style={styles.dropdown_image}
                  mode='stretch'
                  source={icon}
           />
@@ -91,10 +91,10 @@ class Filter extends Component {
   }
 
    componentWillMount() {
-        this.searchNewSetting();  
+         this.searchNewSetting();  
     }
 
-    joinSearhTerm(){
+    joinSearchTerm(){
         let term = '';
         if(this.state.selectedDistance.text !== 'Auto'){
             term += '&radius=' + this.state.selectedDistance.text.substr(0, this.state.selectedDistance.text.indexOf(' '));
@@ -108,13 +108,13 @@ class Filter extends Component {
             term += '&categories=' + this.state.selectedCategories.join(',');
         }
 
-        this.setState({searchTerm: term})
-           this.props.dispatch(actionCreators.storeFilterSettings({
+        this.setState({searchTerm: term});
+        this.props.dispatch(actionCreators.storeFilterSettings({
             offerSetting:this.state.offerSetting,
             selectedDistance: this.state.selectedDistance,
             selectedSortBy: this.state.selectedSortBy,
             categories: this.state.currentCategories,
-            searchTerm : this.state.searchTerm
+            searchTerm : term
         }))
 
           this.props.navigator.push({
@@ -124,8 +124,6 @@ class Filter extends Component {
     }
 
 addValueToCategory(alias, rowID){
-
-    
     let tmpCategory = this.state.currentCategories;
     var index = this.state.selectedCategories.indexOf(alias);
     if (index != -1){
@@ -155,15 +153,22 @@ renderCategoryCell(rowData, rowID) {
 
   async searchNewSetting(){
         console.log('Start getting data from category api');
-        let category = await Yelp.getCategories();
-        this.setState({
+        //let category = await Yelp.getCategories();
+
+    let category = await Yelp.getCategories().then((item) => {
+                //console.log(item);
+                return item;
+          });;
+    console.log(category.length);
+    if (category.length > 0){
+         this.setState({
             categories:category,
             currentCategories: category.slice(0,3),
             visible:false,
-             dataSource: this
-                .ds
+             dataSource: this.ds
                 .cloneWithRows(category.slice(0,3))
         })
+    }      
   }
 
   expandListView()
@@ -185,24 +190,17 @@ renderCategoryCell(rowData, rowID) {
   }
 
 returnSearchScreen(){
-   this.props.dispatch(actionCreators.storeFilterSettings({
-            offerSetting:this.state.offerSetting,
-            selectedDistance: this.state.selectedDistance,
-            selectedSortBy: this.state.selectedSortBy,
-            categories: this.state.currentCategories,
-            searchTerm : this.state.searchTerm
-}))
     this.props.navigator.push({
         title:'Search Screen',
         component:SearchScreen
     })
 }
     render(){
-        let dropdown_6_icon = this.state.dropdown_6_icon_heart ? require('../resources/heart.png') : require('../resources/uncheck.png');
+        let dropdown_icon = this.state.dropdown_icon_heart ? require('../resources/heart.png') : require('../resources/uncheck.png');
        const distanceOptions = ['Auto','3 miles','1 miles','5 miles','20 miles'];
         const matchOptions = ['Best Match','Review Count','Rating'];
 
-           if (this.state.categories.length !== 0) {
+           if (this.state.categories.length === 0) {
             return (
                 
                     <View style={{flex:1, justifyContent:'center',backgroundColor:'#d11141'}}>
@@ -219,39 +217,39 @@ returnSearchScreen(){
             backgroundColor:'#d11141',paddingTop:30, paddingBottom:10,marginLeft: 8, marginRight:8}}>
                 <Text style={{fontSize: 20,color:'white',fontWeight:'bold'}} onPress={() => this.returnSearchScreen()}>Cancel</Text>
                 <Text style={{fontSize: 18,color:'white', fontWeight:'bold'}}>Filter</Text>
-                <Text style={{fontSize: 20,color:'white',fontWeight:'bold'}} onPress={() => this.joinSearhTerm()}>Search</Text>
+                <Text style={{fontSize: 20,color:'white',fontWeight:'bold'}} onPress={() => this.joinSearchTerm()}>Search</Text>
             </View>
 
             <View style={{backgroundColor:'white', height:'95%', paddingTop:10}}>
                 <CustomSwitch switchOn={true} text='Offering a Deal'/>
                 <Text style={{paddingLeft: 8, fontSize:20,paddingTop:10, paddingBottom:10}}>Distance</Text>
-                <ModalDropDown style={styles.dropdown_2}
+                <ModalDropDown style={styles.dropdown}
                 style={{paddingTop:6,paddingBottom:6, 
             backgroundColor:'white',borderRadius: 5, borderWidth: 1,borderColor:'silver',
              marginTop:2, marginLeft:8, marginRight:8}}
-                           textStyle={styles.dropdown_2_text}
+                           textStyle={styles.dropdown_text}
                            defaultIndex={this.state.selectedDistance.index}
-                           dropdownStyle={styles.dropdown_2_dropdown}
+                           dropdownStyle={styles.dropdown_dropdown}
                            options={distanceOptions} onSelect={(index,value) => this.setState({selectedDistance:
                                { index: index, text:value}
                            })}
-                           renderRow={this._dropdown_2_renderRow.bind(this)}>
+                           renderRow={this._dropdown_renderRow.bind(this)}>
                            <Text style={{fontSize:22, paddingTop:4, paddingBottom:4,marginLeft:8, fontWeight:'500'}}>{this.state.selectedDistance.text}</Text>              
                 </ModalDropDown>
 
                 <Text style={{paddingLeft: 8, fontSize:20,paddingTop:10, paddingBottom:10}}>Sort By</Text>    
-                  <ModalDropDown style={styles.dropdown_2}
+                  <ModalDropDown style={styles.dropdown}
                 style={{paddingTop:6,paddingBottom:6,
             backgroundColor:'white',borderRadius: 5, borderWidth: 1,borderColor:'silver',
              marginTop:2, marginLeft:8, marginRight:8}}
-                           textStyle={styles.dropdown_2_text}
+                           textStyle={styles.dropdown_text}
                            defaultIndex={this.state.selectedSortBy.index}
-                           dropdownStyle={styles.dropdown_2_dropdown}
+                           dropdownStyle={styles.dropdown_dropdown}
                            options={matchOptions} onSelect={(index,value) => this.setState({
                                selectedSortBy:
                                { index: index, text:value}
                            })}
-                           renderRow={this._dropdown_2_renderRow.bind(this)}>
+                           renderRow={this._dropdown_renderRow.bind(this)}>
                            <Text style={{fontSize:22, paddingTop:4, paddingBottom:4,marginLeft:8, fontWeight:'500'}}>{this.state.selectedSortBy.text}</Text>              
                 </ModalDropDown>
 
@@ -273,24 +271,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  dropdown_2: {
+  dropdown: {
     alignSelf: 'center',
     top: 32,
     right: 8,
     justifyContent:'space-between',
     backgroundColor: 'cornflowerblue',
   },
-  dropdown_2_text: {
+  dropdown_text: {
     fontSize: 22,
     color: 'white',
     textAlign: 'center',
   },
-  dropdown_2_dropdown: {
+  dropdown_dropdown: {
     marginTop:10,
     height: 253,
 
   },
-  dropdown_2_row: {
+  dropdown_row: {
        borderTopColor: 'white',
        width:'95%',
     flexDirection: 'row',
@@ -298,12 +296,11 @@ const styles = StyleSheet.create({
     justifyContent:'space-between',
     alignItems: 'center',
   },
-  dropdown_2_image: {
-    //marginLeft:200,
+  dropdown_image: {
     width: 30,
     height: 30,
   },
-  dropdown_2_row_text: {
+  dropdown_row_text: {
     marginHorizontal: 14,
     fontSize: 22,
     color: 'navy',
@@ -312,8 +309,7 @@ const styles = StyleSheet.create({
 })
 
 const mapStateToProps = (state) => {
-    console.log(state);
-    return {userData: state.params}
+    return {filterData: state.params}
 }
 
 export default connect(mapStateToProps)(Filter);

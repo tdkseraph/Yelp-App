@@ -37,7 +37,6 @@ export const actionCreators = {
         }
     },
     storeFilterSettings(params){
-        console.log(params);
         return {
             type:types.filterScreen,
             payload: params
